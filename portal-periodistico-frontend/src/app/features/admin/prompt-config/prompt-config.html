@@ -1,0 +1,103 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico - Administración</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          Gestión de Usuarios
+        </a>
+        <a routerLink="/admin/prompt-config" routerLinkActive="active" class="nav-item">
+          Configuración de Sugerencias
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="prompt-config-container">
+      <!-- Header -->
+      <div class="page-header">
+        <h1>Configuración del Prompt de Sugerencias</h1>
+      </div>
+
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        <p>Cargando configuración...</p>
+      </div>
+
+      <!-- Prompt Configuration Form -->
+      <div *ngIf="!loading" class="config-card">
+        <div class="info-section">
+          <h3>Instrucciones</h3>
+          <p>
+            Este prompt se utiliza para generar sugerencias de artículos basadas en las tendencias
+            actuales de Ecuador.
+          </p>
+          <ul>
+            <li>
+              El placeholder <code>{{ '&#123;TRENDS&#125;' }}</code> será reemplazado
+              automáticamente con las tendencias actuales
+            </li>
+            <li>El prompt debe solicitar a la IA que devuelva un arreglo JSON de strings</li>
+            <li>
+              Puedes personalizar el tono, el número de sugerencias, y el enfoque del contenido
+            </li>
+          </ul>
+        </div>
+
+        <div class="form-section">
+          <label for="promptTemplate">Prompt Template</label>
+          <textarea
+            id="promptTemplate"
+            [(ngModel)]="promptTemplate"
+            rows="10"
+            class="prompt-textarea"
+            placeholder="Ingresa el prompt para generar sugerencias..."
+          ></textarea>
+
+          <div class="char-count">{{ promptTemplate.length }} caracteres</div>
+        </div>
+
+        <div class="meta-info" *ngIf="lastUpdated">
+          <p>
+            <strong>Última actualización:</strong> {{ lastUpdated | date : 'dd/MM/yyyy HH:mm' }}
+          </p>
+          <p><strong>Actualizado por:</strong> {{ updatedBy || 'Sistema' }}</p>
+        </div>
+
+        <div class="action-buttons">
+          <button
+            class="btn btn-secondary"
+            (click)="resetChanges()"
+            [disabled]="!hasChanges() || saving"
+          >
+            Descartar Cambios
+          </button>
+          <button
+            class="btn btn-primary"
+            (click)="savePromptConfig()"
+            [disabled]="!hasChanges() || saving"
+          >
+            {{ saving ? 'Guardando...' : 'Guardar Configuración' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,206 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico - Administración</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
+        <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          Gestión de Usuarios
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="user-list-container">
+      <!-- Header -->
+      <div class="page-header">
+        <h1>Gestión de Usuarios</h1>
+        <button class="btn btn-primary" (click)="openCreateModal()">+ Crear Usuario</button>
+      </div>
+
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage && !showModal" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading && users.length === 0" class="loading">
+        <p>Cargando usuarios...</p>
+      </div>
+
+      <!-- Users Table -->
+      <div *ngIf="!loading || users.length > 0" class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Roles</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users" [class.inactive-row]="!user.active">
+              <td>{{ user.userId }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.firstName }} {{ user.lastName }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
+              </td>
+              <td>
+                <span [class.status-active]="user.active" [class.status-inactive]="!user.active">
+                  {{ user.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button
+                    class="btn btn-sm btn-primary"
+                    (click)="openEditModal(user)"
+                    [disabled]="!user.active"
+                  >
+                    Editar
+                  </button>
+                  <label class="toggle-switch">
+                    <input
+                      type="checkbox"
+                      [checked]="user.active"
+                      (change)="toggleUserStatus(user)"
+                    />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div *ngIf="users.length === 0" class="no-users">
+          <p>No hay usuarios registrados.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Create/Edit User -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'Editar Usuario' : 'Crear Nuevo Usuario' }}</h2>
+      <button class="modal-close" (click)="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Error in modal -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <form>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="username">Usuario *</label>
+            <input
+              type="text"
+              id="username"
+              [(ngModel)]="formData.username"
+              name="username"
+              class="form-control"
+              [disabled]="isEditMode"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="formData.email"
+              name="email"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">Nombre *</label>
+            <input
+              type="text"
+              id="firstName"
+              [(ngModel)]="formData.firstName"
+              name="firstName"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Apellido *</label>
+            <input
+              type="text"
+              id="lastName"
+              [(ngModel)]="formData.lastName"
+              name="lastName"
+              class="form-control"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">
+            Contraseña {{ isEditMode ? '(dejar en blanco para no cambiar)' : '*' }}
+          </label>
+          <input
+            type="password"
+            id="password"
+            [(ngModel)]="formData.password"
+            name="password"
+            class="form-control"
+            [required]="!isEditMode"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Roles *</label>
+          <div class="roles-checkboxes">
+            <label *ngFor="let role of availableRoles" class="checkbox-label">
+              <input
+                type="checkbox"
+                [checked]="isRoleSelected(role)"
+                (change)="toggleRole(role)"
+              />
+              {{ role }}
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="submitForm()" [disabled]="loading">
+        {{ isEditMode ? 'Actualizar' : 'Crear' }}
+      </button>
+    </div>
+  </div>
+</div>

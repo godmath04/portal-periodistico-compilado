@@ -1,0 +1,27 @@
+// Colores principales
+$primary-dark: #011126;      // Azul oscuro - Backgrounds principales, header
+$primary-blue: #29A7D9;      // Azul medio - Botones primarios, links
+$primary-cyan: #2BB9D9;      // Azul cyan - Hover states, highlights
+$neutral-light: #F2F2F2;     // Gris claro - Fondos secundarios, cards
+$neutral-dark: #0D0D0D;      // Negro - Textos principales
+
+// Estados
+$success: #2BB9D9;
+$warning: #F2A83B;
+$danger: #D92B2B;
+
+// Espaciados
+$spacing-xs: 8px;
+$spacing-sm: 16px;
+$spacing-md: 24px;
+$spacing-lg: 32px;
+$spacing-xl: 48px;
+
+// Bordes
+$border-radius: 8px;
+$border-radius-sm: 4px;
+
+// Sombras
+$shadow-sm: 0 2px 4px rgba(1, 17, 38, 0.1);
+$shadow-md: 0 4px 8px rgba(1, 17, 38, 0.15);
+$shadow-lg: 0 8px 16px rgba(1, 17, 38, 0.2);

@@ -1,0 +1,89 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-item">
+          Dashboard
+        </a>
+        <a routerLink="/articles" routerLinkActive="active" class="nav-item">
+          Mis Artículos
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="article-create-container">
+      <div class="page-header">
+        <h1>Crear Nuevo Artículo</h1>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Formulario -->
+      <form [formGroup]="articleForm" (ngSubmit)="onSubmit()" class="article-form card">
+        <!-- Título -->
+        <div class="form-group">
+          <label for="title">Título del Artículo *</label>
+          <input 
+            type="text" 
+            id="title" 
+            formControlName="title"
+            class="form-control"
+            placeholder="Ingresa el título del artículo"
+            [class.error]="title?.invalid && title?.touched">
+          
+          <div *ngIf="title?.invalid && title?.touched" class="error-text">
+            <span *ngIf="title?.errors?.['required']">El título es obligatorio</span>
+            <span *ngIf="title?.errors?.['minlength']">El título debe tener al menos 5 caracteres</span>
+            <span *ngIf="title?.errors?.['maxlength']">El título no puede exceder 200 caracteres</span>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="form-group">
+          <label for="content">Contenido del Artículo *</label>
+          <textarea 
+            id="content" 
+            formControlName="content"
+            class="form-control"
+            rows="15"
+            placeholder="Escribe el contenido del artículo..."
+            [class.error]="content?.invalid && content?.touched"></textarea>
+          
+          <div *ngIf="content?.invalid && content?.touched" class="error-text">
+            <span *ngIf="content?.errors?.['required']">El contenido es obligatorio</span>
+            <span *ngIf="content?.errors?.['minlength']">El contenido debe tener al menos 20 caracteres</span>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="onCancel()"
+            [disabled]="isLoading">
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn btn-primary" 
+            [disabled]="isLoading">
+            <span *ngIf="!isLoading">Guardar Borrador</span>
+            <span *ngIf="isLoading">Guardando...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

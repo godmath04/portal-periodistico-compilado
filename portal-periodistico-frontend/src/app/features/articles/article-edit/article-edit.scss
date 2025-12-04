@@ -1,0 +1,150 @@
+@import '../../../../styles/variables';
+
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background-color: $primary-dark;
+  color: white;
+  padding: $spacing-md $spacing-lg;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $shadow-md;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    color: white;
+  }
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: white;
+  border-right: 1px solid #E0E0E0;
+  padding: $spacing-lg $spacing-md;
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    .nav-item {
+      padding: $spacing-sm $spacing-md;
+      border-radius: $border-radius-sm;
+      text-decoration: none;
+      color: $neutral-dark;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: rgba($primary-blue, 0.1);
+        color: $primary-blue;
+      }
+
+      &.active {
+        background-color: $primary-blue;
+        color: white;
+      }
+    }
+  }
+}
+
+.article-create-container {
+  flex: 1;
+  padding: $spacing-lg;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: $neutral-light;
+}
+
+.page-header {
+  margin-bottom: $spacing-lg;
+
+  h1 {
+    color: $primary-dark;
+    margin: 0;
+  }
+}
+
+.error-message {
+  background-color: rgba($danger, 0.1);
+  color: $danger;
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  margin-bottom: $spacing-md;
+  text-align: center;
+}
+
+.article-form {
+  padding: $spacing-lg;
+
+  .form-group {
+    margin-bottom: $spacing-lg;
+
+    label {
+      display: block;
+      margin-bottom: $spacing-xs;
+      font-weight: 600;
+      color: $primary-dark;
+      font-size: 14px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: $spacing-sm $spacing-md;
+      border: 2px solid #E0E0E0;
+      border-radius: $border-radius;
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-blue;
+        box-shadow: 0 0 0 3px rgba($primary-blue, 0.1);
+      }
+
+      &.error {
+        border-color: $danger;
+      }
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 200px;
+    }
+
+    .error-text {
+      color: $danger;
+      font-size: 12px;
+      margin-top: $spacing-xs;
+
+      span {
+        display: block;
+      }
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+    padding-top: $spacing-md;
+    border-top: 1px solid #E0E0E0;
+
+    button {
+      min-width: 150px;
+    }
+  }
+}

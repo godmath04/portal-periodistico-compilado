@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # 1. BASE DE DATOS (SQL SERVER 2022)
+  # -------------------------------------------------------------
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: db_periodistico_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Ingenieri@2025LP"
+      MSSQL_PID: "Developer"
+    ports:
+      # Mapeamos el puerto 1436 externo al 1433 interno
+      # para que NO choque con tu contenedor 'ingenieria-web' que usa el 1435
+      - "1436:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - red-periodistica
+    # Healthcheck para esperar a que SQL Server arranque antes de lanzar Java
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Ingenieri@2025LP -Q 'SELECT 1' || exit 1" ]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+
+  # -------------------------------------------------------------
+  # 2. MICROSERVICIO: AUTH
+  # -------------------------------------------------------------
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      # URL JDBC ESPECÍFICA PARA SQL SERVER
+      # encrypt=true;trustServerCertificate=true son OBLIGATORIOS en Docker/Java recientes
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://database:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
+      # Driver específico
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      # Dialecto para que Hibernate hable "idioma" SQL Server
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServer2012Dialect
+      # Crear tablas automáticamente
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - red-periodistica
+
+  # -------------------------------------------------------------
+  # 3. MICROSERVICIO: ARTICLE
+  # -------------------------------------------------------------
+  article-service:
+    build: ./article-service
+    container_name: article-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://database:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServer2012Dialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - red-periodistica
+
+  # -------------------------------------------------------------
+  # 4. MICROSERVICIO: SUGGESTION (IA)
+  # -------------------------------------------------------------
+  suggestion-service:
+    build: ./suggestion-service
+    container_name: suggestion-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://database:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServer2012Dialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # API KEY DE GEMINI
+      GOOGLE_GEMINI_API_KEY: "AIzaSyBpwp_BDQIYaZAW0gMKypDYC_RQYq7P-k4"
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - red-periodistica
+
+  # -------------------------------------------------------------
+  # 5. FRONTEND (Angular)
+  # -------------------------------------------------------------
+  frontend:
+    build: ./portal-periodistico-frontend
+    container_name: frontend-angular
+    ports:
+      - "80:80"
+    networks:
+      - red-periodistica
+
+volumes:
+  sqlserver_data:
+
+
+networks:
+  red-periodistica:
+    driver: bridge

@@ -1,0 +1,60 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
+        <a routerLink="/articles" routerLinkActive="active" class="nav-item">Mis Artículos</a>
+        <a routerLink="/suggestions" routerLinkActive="active" class="nav-item">Sugerencias</a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="suggestions-container">
+      <div class="page-header">
+        <h1>Sugerencias de Artículos</h1>
+      </div>
+
+      <div class="suggestions-content">
+        <p class="subtitle">Genera ideas basadas en las tendencias actuales de Ecuador</p>
+
+        <div class="action-section">
+          <button class="btn btn-primary" (click)="getSuggestions()" [disabled]="loading">
+            <span *ngIf="!loading">✨ Generar Sugerencias</span>
+            <span *ngIf="loading">⏳ Generando...</span>
+          </button>
+        </div>
+
+        <div class="error-message" *ngIf="error">
+          <p>⚠️ {{ error }}</p>
+        </div>
+
+        <div class="suggestions-grid" *ngIf="suggestions.length > 0">
+          <div class="suggestion-card" *ngFor="let suggestion of suggestions; let i = index">
+            <div class="card-header">
+              <span class="card-number">{{ i + 1 }}</span>
+            </div>
+            <div class="card-body">
+              <p class="suggestion-text">{{ suggestion }}</p>
+            </div>
+            <div class="card-footer">
+              <button class="btn btn-secondary" (click)="copyToClipboard(suggestion)">
+                📋 Copiar título
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="suggestions.length === 0 && !loading && !error">
+          <p>🎯 Haz clic en "Generar Sugerencias" para obtener ideas de artículos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

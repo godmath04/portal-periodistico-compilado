@@ -1,0 +1,39 @@
+<div class="public-container">
+  <header class="public-header">
+    <h1>Portal Periodístico</h1>
+    <div class="header-actions">
+      <button class="btn-back" (click)="goBack()">← Volver a artículos</button>
+      <button class="btn-login" (click)="goToLogin()">Iniciar Sesión</button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading">
+    <p>Cargando artículo...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-container">
+    <div class="error-message">
+      <p>{{ errorMessage }}</p>
+      <button class="btn-primary" (click)="goBack()">Volver a artículos</button>
+    </div>
+  </div>
+
+  <article *ngIf="!loading && !errorMessage && article" class="article-container">
+    <header class="article-header">
+      <h1 class="article-title">{{ article.title }}</h1>
+
+      <div class="article-meta">
+        <span class="author">Por {{ getAuthorName() }}</span>
+        <span class="date">{{ formatDate(article.createdAt) }}</span>
+      </div>
+    </header>
+
+    <div class="article-content">
+      <p class="article-text">{{ article.content }}</p>
+    </div>
+
+    <footer class="article-footer">
+      <button class="btn-back" (click)="goBack()">← Volver a artículos</button>
+    </footer>
+  </article>
+</div>

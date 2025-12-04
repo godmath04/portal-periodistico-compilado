@@ -1,0 +1,202 @@
+@import '../../../../styles/variables';
+
+// *** AGREGAR ESTILOS DE LAYOUT ***
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+  background-color: $primary-dark;
+  color: white;
+  padding: $spacing-md $spacing-lg;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $shadow-md;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    color: white;
+  }
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: white;
+  border-right: 1px solid #E0E0E0;
+  padding: $spacing-lg $spacing-md;
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    .nav-item {
+      padding: $spacing-sm $spacing-md;
+      border-radius: $border-radius-sm;
+      text-decoration: none;
+      color: $neutral-dark;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: rgba($primary-blue, 0.1);
+        color: $primary-blue;
+      }
+
+      &.active {
+        background-color: $primary-blue;
+        color: white;
+      }
+    }
+  }
+}
+
+// *** ESTILOS DEL CONTENIDO DE ARTÍCULOS ***
+.article-list-container {
+  flex: 1;
+  padding: $spacing-lg;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  background-color: $neutral-light;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+
+  h1 {
+    color: $primary-dark;
+    margin: 0;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: $spacing-xl;
+  color: $primary-blue;
+  font-size: 18px;
+}
+
+.error-message {
+  background-color: rgba($danger, 0.1);
+  color: $danger;
+  padding: $spacing-md;
+  border-radius: $border-radius;
+  text-align: center;
+  margin-bottom: $spacing-md;
+}
+
+.no-articles {
+  text-align: center;
+  padding: $spacing-xl;
+  color: #666;
+
+  p {
+    font-size: 18px;
+    margin-bottom: $spacing-md;
+  }
+}
+
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: $spacing-md;
+}
+
+.article-card {
+  padding: $spacing-md;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+  }
+
+  .article-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: $spacing-md;
+    gap: $spacing-sm;
+
+    h3 {
+      color: $primary-dark;
+      margin: 0;
+      font-size: 18px;
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+
+      &.status-draft {
+        background-color: #E0E0E0;
+        color: #424242;
+      }
+
+      &.status-review {
+        background-color: rgba($primary-cyan, 0.2);
+        color: $primary-blue;
+      }
+
+      &.status-flagged {
+        background-color: rgba($danger, 0.2);
+        color: $danger;
+      }
+
+      &.status-published {
+        background-color: rgba($success, 0.2);
+        color: darken($success, 15%);
+      }
+    }
+  }
+
+  .article-info {
+    margin-bottom: $spacing-md;
+
+    p {
+      margin: $spacing-xs 0;
+      font-size: 14px;
+      color: #666;
+
+      strong {
+        color: $neutral-dark;
+      }
+    }
+
+    .article-progress {
+      color: $primary-blue;
+      font-weight: 500;
+    }
+  }
+
+  .article-actions {
+    display: flex;
+    gap: $spacing-sm;
+    padding-top: $spacing-sm;
+    border-top: 1px solid #E0E0E0;
+    flex-wrap: wrap;
+
+    button {
+      flex: 1;
+      min-width: 100px;
+    }
+  }
+}

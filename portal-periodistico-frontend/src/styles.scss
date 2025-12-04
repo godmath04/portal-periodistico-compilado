@@ -1,0 +1,94 @@
+@import 'styles/variables';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: $neutral-light;
+  color: $neutral-dark;
+  min-height: 100vh;
+}
+
+// Utilidades globales para botones
+.btn {
+  padding: $spacing-sm $spacing-md;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+
+  &-primary {
+    background-color: $primary-blue;
+    color: white;
+    
+    &:hover {
+      background-color: $primary-cyan;
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &-secondary {
+    background-color: $neutral-light;
+    color: $neutral-dark;
+    border: 1px solid $primary-blue;
+    
+    &:hover {
+      background-color: $primary-cyan;
+      color: white;
+    }
+  }
+
+  &-danger {
+    background-color: $danger;
+    color: white;
+    
+    &:hover {
+      opacity: 0.9;
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &-success {
+    background-color: $success;
+    color: white;
+    
+    &:hover {
+      opacity: 0.9;
+      box-shadow: $shadow-md;
+    }
+  }
+}
+
+// Utilidades para cards
+.card {
+  background: white;
+  border-radius: $border-radius;
+  padding: $spacing-md;
+  box-shadow: $shadow-sm;
+  
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+// Utilidades de espaciado
+.mt-1 { margin-top: $spacing-xs; }
+.mt-2 { margin-top: $spacing-sm; }
+.mt-3 { margin-top: $spacing-md; }
+.mt-4 { margin-top: $spacing-lg; }
+
+.mb-1 { margin-bottom: $spacing-xs; }
+.mb-2 { margin-bottom: $spacing-sm; }
+.mb-3 { margin-bottom: $spacing-md; }
+.mb-4 { margin-bottom: $spacing-lg; }
+
+.p-1 { padding: $spacing-xs; }
+.p-2 { padding: $spacing-sm; }
+.p-3 { padding: $spacing-md; }
+.p-4 { padding: $spacing-lg; }

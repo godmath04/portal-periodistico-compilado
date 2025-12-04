@@ -1,0 +1,103 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="nav-item"
+        >
+          Dashboard
+        </a>
+        <a routerLink="/articles" routerLinkActive="active" class="nav-item"> Mis Artículos </a>
+        <a routerLink="/suggestions" routerLinkActive="active" class="nav-item">Sugerencias</a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="article-list-container">
+      <!-- Header -->
+      <div class="page-header">
+        <h1>Mis Artículos</h1>
+        <button class="btn btn-primary" (click)="createArticle()">+ Crear Nuevo Artículo</button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        <p>Cargando artículos...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Lista de artículos -->
+      <div *ngIf="!loading && !errorMessage" class="articles-grid">
+        <div *ngIf="articles.length === 0" class="no-articles">
+          <p>No tienes artículos todavía.</p>
+          <button class="btn btn-primary" (click)="createArticle()">
+            Crear tu primer artículo
+          </button>
+        </div>
+
+        <div *ngFor="let article of articles" class="article-card card">
+          <div class="article-header">
+            <h3>{{ article.title }}</h3>
+            <span
+              class="status-badge"
+              [ngClass]="getStatusInfo(article.status.idArticleStatus).class"
+            >
+              {{ getStatusInfo(article.status.idArticleStatus).name }}
+            </span>
+          </div>
+
+          <div class="article-info">
+            <p class="article-date">
+              <strong>Creado:</strong> {{ article.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+            </p>
+          </div>
+
+          <div class="article-actions">
+            <button class="btn btn-secondary" (click)="viewArticle(article.idArticle)">Ver</button>
+
+            <!-- Editar: solo Borrador u Observado -->
+            <button
+              class="btn btn-primary"
+              (click)="editArticle(article.idArticle)"
+              *ngIf="article.status.idArticleStatus === 1 || article.status.idArticleStatus === 4"
+            >
+              Editar
+            </button>
+
+            <!-- Eliminar: solo Borrador u Observado -->
+            <button
+              class="btn btn-danger"
+              (click)="deleteArticle(article.idArticle)"
+              *ngIf="article.status.idArticleStatus === 1 || article.status.idArticleStatus === 4"
+            >
+              Eliminar
+            </button>
+
+            <!-- Enviar a revisión: Borrador (siempre) u Observado (solo si fue editado) -->
+            <button
+              class="btn btn-success"
+              (click)="submitForReview(article.idArticle)"
+              *ngIf="article.status.idArticleStatus === 1 || (article.status.idArticleStatus === 4 && article.updatedAt)"
+            >
+              {{ article.status.idArticleStatus === 4 ? 'Reenviar a Revisión' : 'Enviar a Revisión' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

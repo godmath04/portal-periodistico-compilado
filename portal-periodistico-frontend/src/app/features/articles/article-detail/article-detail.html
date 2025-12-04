@@ -1,0 +1,135 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico</h1>
+    <button class="btn btn-secondary" (click)="goBack()">← Volver a Mis Artículos</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
+        <a *ngIf="isReporter" routerLink="/articles" routerLinkActive="active" class="nav-item">
+          Mis Artículos
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="article-detail-container">
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading">
+        <p>Cargando artículo...</p>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="error-message">
+        <p>{{ errorMessage }}</p>
+        <button class="btn btn-primary" (click)="goBack()">Volver</button>
+      </div>
+
+      <!-- Artículo -->
+      <div *ngIf="!loading && !errorMessage && article" class="article-content card">
+        <!-- Header del artículo -->
+        <div class="article-header">
+          <h1>{{ article.title }}</h1>
+          <span
+            class="status-badge"
+            [ngClass]="getStatusInfo(article.status.idArticleStatus).class"
+          >
+            {{ getStatusInfo(article.status.idArticleStatus).name }}
+          </span>
+        </div>
+
+        <!-- Metadata -->
+        <div class="article-metadata">
+          <p><strong>Creado:</strong> {{ article.createdAt | date : 'dd/MM/yyyy HH:mm' }}</p>
+          <p *ngIf="article.updatedAt">
+            <strong>Última modificación:</strong>
+            {{ article.updatedAt | date : 'dd/MM/yyyy HH:mm' }}
+          </p>
+          <p><strong>Autor ID:</strong> {{ article.author.idUser }}</p>
+        </div>
+
+        <hr />
+
+        <!-- Contenido del artículo -->
+        <div class="article-body">
+          <p>{{ article.content }}</p>
+        </div>
+        <!-- Historial de Aprobaciones -->
+        <div class="approval-history-section">
+          <h2>Historial de Aprobaciones</h2>
+
+          <!-- Loading historial -->
+          <div *ngIf="loadingHistory" class="loading-history">
+            <p>Cargando historial...</p>
+          </div>
+
+          <!-- Sin historial -->
+          <div *ngIf="!loadingHistory && approvalHistory.length === 0" class="no-history">
+            <p>Este artículo aún no tiene aprobaciones registradas.</p>
+          </div>
+
+          <!-- Lista de aprobaciones -->
+          <div *ngIf="!loadingHistory && approvalHistory.length > 0" class="approval-list">
+            <div *ngFor="let approval of approvalHistory; let last = last" class="approval-item">
+              <div class="approval-header">
+                <div class="approval-role-info">
+                  <h3 class="approval-role">{{ approval.roleName }}</h3>
+                  <span class="approval-weight">Peso: {{ approval.approvalWeight }}%</span>
+                </div>
+                <span
+                  class="approval-status-badge"
+                  [ngClass]="getApprovalStatusClass(approval.status)"
+                >
+                  {{ getApprovalStatusText(approval.status) }}
+                </span>
+              </div>
+              <div class="approval-details">
+                <p><strong>Usuario:</strong> {{ approval.approverUsername }}</p>
+              </div>
+              <div *ngIf="approval.message" class="approval-message">
+                <p>{{ approval.message }}</p>
+              </div>
+              <hr *ngIf="!last" class="approval-separator" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="article-actions">
+          <button class="btn btn-secondary" (click)="goBack()">← Volver</button>
+
+          <!-- Editar: solo Borrador u Observado -->
+          <button
+            class="btn btn-primary"
+            (click)="editArticle(article.idArticle)"
+            *ngIf="article.status.idArticleStatus === 1 || article.status.idArticleStatus === 4"
+          >
+            Editar
+          </button>
+
+          <!-- Eliminar: solo Borrador u Observado -->
+          <button
+            class="btn btn-danger"
+            (click)="deleteArticle(article.idArticle)"
+            *ngIf="article.status.idArticleStatus === 1 || article.status.idArticleStatus === 4"
+          >
+            Eliminar
+          </button>
+
+          <!-- Enviar a revisión: Borrador (siempre) u Observado (solo si fue editado) -->
+          <button
+            class="btn btn-success"
+            (click)="submitForReview(article.idArticle)"
+            *ngIf="article.status.idArticleStatus === 1 || (article.status.idArticleStatus === 4 && article.updatedAt)"
+          >
+            {{ article.status.idArticleStatus === 4 ? 'Reenviar a Revisión' : 'Enviar a Revisión' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

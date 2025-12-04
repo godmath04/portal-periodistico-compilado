@@ -1,0 +1,215 @@
+<div class="page-container">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <h1>Portal Periodístico</h1>
+    <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+  </nav>
+
+  <div class="main-content">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">Dashboard</a>
+        <a
+          *ngIf="isReporter"
+          routerLink="/articles"
+          routerLinkActive="active"
+          class="nav-item"
+        >
+          Mis Artículos
+        </a>
+        <a *ngIf="isReporter" routerLink="/suggestions" routerLinkActive="active" class="nav-item">
+          Sugerencias
+        </a>
+        <a *ngIf="isAdmin" routerLink="/admin/users" routerLinkActive="active" class="nav-item">
+          Gestión de Usuarios
+        </a>
+        <a
+          *ngIf="isAdmin"
+          routerLink="/admin/prompt-config"
+          routerLinkActive="active"
+          class="nav-item"
+        >
+          Configuración de Sugerencias
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Content -->
+    <div class="dashboard-container">
+      <!-- Success Message -->
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <!-- ========================== -->
+      <!-- VISTA PARA REPORTEROS -->
+      <!-- ========================== -->
+      <div *ngIf="isReporter">
+        <!-- Header -->
+        <div class="page-header">
+          <h1>Bienvenido al Portal Periodístico</h1>
+        </div>
+
+        <div class="welcome-section">
+          <div class="welcome-card">
+            <h2>¡Hola!</h2>
+            <p>Estamos encantados de tenerte en nuestro equipo editorial.</p>
+          </div>
+
+          <div class="info-cards">
+            <div class="info-card">
+              <div class="info-icon">📝</div>
+              <h3>Tus Artículos</h3>
+              <p>
+                Gestiona todos tus artículos desde la sección "Mis Artículos" en el menú lateral.
+              </p>
+              <button class="btn btn-primary" routerLink="/articles">Ver Mis Artículos</button>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">✨</div>
+              <h3>Sugerencias de Temas</h3>
+              <p>Descubre ideas de artículos basadas en las tendencias actuales de Ecuador.</p>
+              <button class="btn btn-primary" routerLink="/suggestions">Generar Sugerencias</button>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">➕</div>
+              <h3>Crear Nuevo Artículo</h3>
+              <p>Comienza a escribir un nuevo artículo y compártelo con el mundo.</p>
+              <button class="btn btn-primary" routerLink="/articles/create">Crear Artículo</button>
+            </div>
+          </div>
+
+          <div class="news-section">
+            <h3>Novedades del Portal</h3>
+            <div class="news-item">
+              <span class="news-date">Noviembre 2024</span>
+              <p>
+                <strong>Nueva funcionalidad:</strong> Ahora puedes obtener sugerencias de temas
+                basadas en IA y tendencias actuales.
+              </p>
+            </div>
+            <div class="news-item">
+              <span class="news-date">Noviembre 2024</span>
+              <p>
+                <strong>Recordatorio:</strong> Todos los artículos deben pasar por el proceso de
+                aprobación antes de ser publicados.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================== -->
+      <!-- VISTA PARA APROBADORES -->
+      <!-- ========================== -->
+      <div *ngIf="isApprover">
+        <!-- Header -->
+        <div class="page-header">
+          <h1>Artículos Pendientes de Revisión</h1>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading && pendingArticles.length === 0" class="loading">
+          <p>Cargando artículos pendientes...</p>
+        </div>
+
+        <!-- Sin artículos pendientes -->
+        <div *ngIf="!loading && pendingArticles.length === 0 && !errorMessage" class="no-articles">
+          <p>No hay artículos pendientes de revisión en este momento.</p>
+        </div>
+
+        <!-- Lista de artículos pendientes -->
+        <div *ngIf="!loading && pendingArticles.length > 0" class="articles-grid">
+          <div *ngFor="let article of pendingArticles" class="article-card card">
+            <div class="article-header">
+              <h3>{{ article.title }}</h3>
+              <span class="status-badge status-review">En Revisión</span>
+            </div>
+
+            <div class="article-info">
+              <p class="article-date">
+                <strong>Creado:</strong> {{ article.createdAt | date : 'dd/MM/yyyy HH:mm' }}
+              </p>
+              <p class="article-author"><strong>Autor ID:</strong> {{ article.author.idUser }}</p>
+            </div>
+
+            <div class="article-content-preview">
+              <p>{{ article.content.substring(0, 150) }}...</p>
+            </div>
+
+            <div class="article-actions">
+              <button class="btn btn-secondary" (click)="viewArticle(article.idArticle)">
+                Ver Completo
+              </button>
+
+              <!-- Mostrar botones solo si el rol del usuario NO ha revisado el artículo -->
+              <ng-container *ngIf="!hasUserRoleReviewedArticle(article.idArticle)">
+                <button class="btn btn-success" (click)="openApprovalModal(article, 'APPROVED')">
+                  Aprobar
+                </button>
+                <button class="btn btn-danger" (click)="openApprovalModal(article, 'REJECTED')">
+                  Rechazar
+                </button>
+              </ng-container>
+
+              <!-- Mostrar mensaje si ya revisó -->
+              <span *ngIf="hasUserRoleReviewedArticle(article.idArticle)" class="reviewed-badge">
+                ✓ Ya revisado
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Aprobación/Rechazo -->
+<div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>
+        {{ approvalAction === 'APPROVED' ? 'Aprobar Artículo' : 'Rechazar Artículo' }}
+      </h2>
+      <button class="modal-close" (click)="closeModal()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-article-title"><strong>Artículo:</strong> {{ selectedArticle?.title }}</p>
+
+      <div class="form-group">
+        <label for="comments">
+          Comentarios
+          {{ approvalAction === 'REJECTED' ? '(obligatorio para rechazos)' : '(opcional)' }}:
+        </label>
+        <textarea
+          id="comments"
+          [(ngModel)]="comments"
+          rows="4"
+          placeholder="Escribe tus comentarios aquí..."
+          class="form-control"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+      <button
+        class="btn"
+        [ngClass]="approvalAction === 'APPROVED' ? 'btn-success' : 'btn-danger'"
+        (click)="submitApproval()"
+        [disabled]="approvalAction === 'REJECTED' && !comments"
+      >
+        {{ approvalAction === 'APPROVED' ? 'Confirmar Aprobación' : 'Confirmar Rechazo' }}
+      </button>
+    </div>
+  </div>
+</div>

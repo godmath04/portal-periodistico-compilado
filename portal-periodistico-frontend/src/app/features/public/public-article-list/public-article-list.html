@@ -1,0 +1,44 @@
+<div class="public-container">
+  <header class="public-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Portal Periodístico</h1>
+        <p class="subtitle">Artículos Publicados</p>
+      </div>
+      <button class="btn-login" (click)="goToLogin()">Iniciar Sesión</button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="loading">
+    <p>Cargando artículos...</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="!loading && !errorMessage" class="articles-container">
+    <div *ngIf="articles.length === 0" class="no-articles">
+      <p>No hay artículos publicados en este momento.</p>
+    </div>
+
+    <div
+      *ngFor="let article of articles"
+      class="article-card"
+      (click)="viewArticle(article.idArticle)"
+    >
+      <h2 class="article-title">{{ article.title }}</h2>
+
+      <div class="article-meta">
+        <span class="author">Por {{ getAuthorName(article) }}</span>
+        <span class="date">{{ formatDate(article.createdAt) }}</span>
+      </div>
+
+      <div class="article-preview">
+        {{ article.content.substring(0, 200) }}{{ article.content.length > 200 ? '...' : '' }}
+      </div>
+
+      <button class="btn-read-more">Leer más</button>
+    </div>
+  </div>
+</div>
