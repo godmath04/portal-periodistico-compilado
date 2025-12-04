@@ -14,7 +14,7 @@ RUN mvn clean package -DskipTests
 
 # ETAPA 2: Ejecución (Runtime)
 # Usamos una imagen ligera de Java 21 para correr la app
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Copiamos el .jar generado en la etapa anterior
