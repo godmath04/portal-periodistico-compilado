@@ -1,16 +1,14 @@
 version: '3.8'
 
 services:
-  # NO HAY DATABASE - USAMOS TU CONTENEDOR EXISTENTE
-
   auth-service:
     build: ./auth-service
     container_name: auth-service
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1435;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
-      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://periodistico-server.database.windows.net:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=false;
+      SPRING_DATASOURCE_USERNAME: sqladmin
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -21,8 +19,8 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1435;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
-      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://periodistico-server.database.windows.net:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=false;
+      SPRING_DATASOURCE_USERNAME: sqladmin
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -33,8 +31,8 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:sqlserver://host.docker.internal:1435;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=true;
-      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_URL: jdbc:sqlserver://periodistico-server.database.windows.net:1433;databaseName=DB_CorePeriodistico;encrypt=true;trustServerCertificate=false;
+      SPRING_DATASOURCE_USERNAME: sqladmin
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
