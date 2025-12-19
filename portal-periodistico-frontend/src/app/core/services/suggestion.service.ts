@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment.prod';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SuggestionService {
   // URL del microservicio
-  private apiUrl = 'http://localhost:8083/api/suggestions/generate';
+  private apiUrl = `${environment.apiUrls.suggestion}/api/suggestions/generate`;
 
   constructor(private http: HttpClient) {}
 

@@ -73,6 +73,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Permitir health checks (para Azure Container Apps)
+                        .requestMatchers("/actuator/**").permitAll()
                         // Definimos nuestras rutas públicas (login, registro, etc.)
                         // Por ahora, dejaremos /auth/** como público
                         .requestMatchers("/auth/**").permitAll()

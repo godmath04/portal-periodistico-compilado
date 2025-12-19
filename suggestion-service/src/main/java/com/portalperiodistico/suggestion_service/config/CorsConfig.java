@@ -16,8 +16,9 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // 1. Permitir al Frontend (Angular por defecto corre en el 4200)
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        // 1. Permitir al Frontend (local y Azure)
+        String allowedOrigins = System.getenv().getOrDefault("ALLOWED_ORIGINS", "http://localhost:4200");
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
 
         // 2. Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

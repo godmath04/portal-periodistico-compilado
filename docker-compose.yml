@@ -12,6 +12,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      ALLOWED_ORIGINS: "https://frontend.purpleground-40845a42.westus2.azurecontainerapps.io,http://localhost:4200"
 
   article-service:
     build: ./article-service
@@ -24,6 +25,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      ALLOWED_ORIGINS: "https://frontend.purpleground-40845a42.westus2.azurecontainerapps.io,http://localhost:4200"
 
   suggestion-service:
     build: ./suggestion-service
@@ -36,6 +38,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: "Ingenieri@2025LP"
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.SQLServerDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      ALLOWED_ORIGINS: "https://frontend.purpleground-40845a42.westus2.azurecontainerapps.io,http://localhost:4200"
       GOOGLE_GEMINI_API_KEY: "AIzaSyBpwp_BDQIYaZAW0gMKypDYC_RQYq7P-k4"
 
   frontend:

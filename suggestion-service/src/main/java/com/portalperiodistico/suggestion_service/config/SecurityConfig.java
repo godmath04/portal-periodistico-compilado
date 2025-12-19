@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Permitir health checks (para Azure Container Apps)
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/suggestions/**").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -14,7 +14,7 @@ public class PromptConfig {
     @Id
     @GeneratedValue(strategy =
             GenerationType.IDENTITY)
-    @Column(name = "IdPromptConfig")
+    @Column(name = "ConfigID")
     private Long idPromptConfig;
 
     @Column(name = "PromptTemplate", nullable

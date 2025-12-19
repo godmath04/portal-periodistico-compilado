@@ -16,8 +16,9 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permitir peticiones desde el frontend
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:4200"));
+        // Permitir peticiones desde el frontend (local y Azure)
+        String allowedOrigins = System.getenv().getOrDefault("ALLOWED_ORIGINS", "http://localhost:4200");
+        configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
 
         // Permitir todos los métodos HTTP
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));

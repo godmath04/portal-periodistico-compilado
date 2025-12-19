@@ -20,12 +20,12 @@ public class ArticleApproval {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "[ArticleApprovalID]")
+    @Column(name = "[ApprovalID]")
     private Long articleApprovalId;
 
     // Relacion con Article
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "[ArticleID]", referencedColumnName = "[IdArticle]", nullable = false)
+    @JoinColumn(name = "[ArticleID]", referencedColumnName = "[ArticleID]", nullable = false)
     private Article article;
 
     // ID del usuario que aprobo/rechazo (no FK, viene del JWT)

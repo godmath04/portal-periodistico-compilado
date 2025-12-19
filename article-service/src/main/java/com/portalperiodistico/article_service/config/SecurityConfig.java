@@ -38,6 +38,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Permitir OPTIONS (CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Permitir health checks (para Azure Container Apps)
+                        .requestMatchers("/actuator/**").permitAll()
                         // GET publicos
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/articles/**").permitAll()
 
