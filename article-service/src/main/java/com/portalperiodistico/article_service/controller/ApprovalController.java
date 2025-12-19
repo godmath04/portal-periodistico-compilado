@@ -2,10 +2,9 @@ package com.portalperiodistico.article_service.controller;
 
 import com.portalperiodistico.article_service.domain.dto.ApprovalRequest;
 import com.portalperiodistico.article_service.domain.dto.ApprovalResponse;
-import com.portalperiodistico.article_service.domain.entity.Role;
-import com.portalperiodistico.article_service.domain.repository.RoleRepository;
 import com.portalperiodistico.article_service.security.UserPrincipal;
 import com.portalperiodistico.article_service.service.ApprovalService;
+import com.portalperiodistico.article_service.service.interfaces.RoleWeightProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,13 +17,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Controlador REST para operaciones de aprobación/rechazo de artículos
+ *
+ * Principios SOLID aplicados:
+ * - Dependency Inversion Principle (DIP): Depende de RoleWeightProvider (interfaz),
+ *   no de RoleRepository (implementación concreta)
+ *
+ * Antes: Controller dependía directamente de RoleRepository
+ * Ahora: Controller depende de RoleWeightProvider (abstracción)
+ */
 @RestController
 @RequestMapping("/api/v1/approvals")
 @RequiredArgsConstructor
 public class ApprovalController {
 
     private final ApprovalService approvalService;
-    private final RoleRepository roleRepository;
+    private final RoleWeightProvider roleWeightProvider;
 
     /**
      * Aprobar o rechazar un articulo
@@ -53,18 +62,18 @@ public class ApprovalController {
 
         String roleName = userRoles.get(0);
 
-        // Buscar el rol en la BD para obtener el approvalWeight
-        Role role = roleRepository.findByRoleName(roleName)
-                .orElseThrow(() -> new RuntimeException("Rol '" + roleName + "' no encontrado en la BD"));
+        // Obtener información del rol usando el proveedor de roles
+        BigDecimal roleWeight = roleWeightProvider.getRoleApprovalWeight(roleName);
+        Integer roleId = roleWeightProvider.getRoleId(roleName);
 
-        // Procesar la aprobacion
+        // Procesar la aprobación
         ApprovalResponse response = approvalService.processApproval(
                 request,
                 authenticatedUser.getUserId(),
                 authenticatedUser.getUsername(),
-                role.getRoleId(),
-                role.getRoleName(),
-                role.getApprovalWeight()
+                roleId,
+                roleName,
+                roleWeight
         );
 
         return ResponseEntity.ok(response);

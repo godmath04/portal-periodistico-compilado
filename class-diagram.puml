@@ -1,0 +1,342 @@
+@startuml Portal Periodistico - Class Diagram
+
+!define PRIMARY_KEY <color:red><b>PK</b></color>
+!define FOREIGN_KEY <color:blue><b>FK</b></color>
+
+title Portal Periodistico Microservices - Class Diagram
+
+package "Auth Service (Port 8081)" {
+
+    class User {
+        PRIMARY_KEY userId: Long
+        username: String {unique, required}
+        passwordHash: String
+        email: String {unique}
+        firstName: String
+        lastName: String
+        isActive: Boolean
+        --
+        + getRoles(): Set<Role>
+    }
+
+    class Role {
+        PRIMARY_KEY roleId: Long
+        roleName: String {unique}
+        description: String
+        approvalWeight: BigDecimal
+        --
+        + getUsers(): Set<User>
+    }
+
+    class JwtService {
+        - secretKey: String
+        - jwtExpiration: Long
+        --
+        + generateToken(username: String, userId: Long, roles: Set<Role>): String
+        + extractUsername(token: String): String
+        + extractUserId(token: String): Long
+        + extractRoles(token: String): List<String>
+        + validateToken(token: String): Boolean
+    }
+
+    class AuthController {
+        --
+        + login(LoginRequest): ResponseEntity<LoginResponse>
+        + register(RegisterRequest): ResponseEntity<RegisterResponse>
+        + getUserById(id: Long): ResponseEntity<User>
+    }
+
+    class AdminUserController {
+        --
+        + createUser(AdminUserRequest): ResponseEntity<User>
+        + getAllUsers(): ResponseEntity<List<User>>
+        + updateUser(id: Long, AdminUserRequest): ResponseEntity<User>
+        + deleteUser(id: Long): ResponseEntity<Void>
+    }
+
+    class AdminUserService {
+        --
+        + createUser(AdminUserRequest): User
+        + getAllUsers(): List<User>
+        + updateUser(id: Long, AdminUserRequest): User
+        + deleteUser(id: Long): void
+    }
+
+    class UserDetailsServiceImpl {
+        --
+        + loadUserByUsername(username: String): UserDetails
+    }
+}
+
+package "Article Service (Port 8082)" {
+
+    class Article {
+        PRIMARY_KEY idArticle: Long
+        title: String {required, max=255}
+        content: String {required, TEXT}
+        FOREIGN_KEY authorId: Long
+        createdAt: LocalDateTime
+        updatedAt: LocalDateTime
+        currentApprovalPercentage: BigDecimal
+        FOREIGN_KEY idArticleStatus: Long
+        --
+        + getArticleStatus(): ArticleStatus
+        + getApprovals(): List<ArticleApproval>
+    }
+
+    class ArticleStatus {
+        PRIMARY_KEY idArticleStatus: Long
+        statusName: String {unique, required}
+        --
+        + getArticles(): List<Article>
+    }
+
+    note right of ArticleStatus
+        Status Values:
+        - "Borrador" (Draft)
+        - "En revision" (In Review)
+        - "Publicado" (Published)
+        - "Observado" (Rejected)
+    end note
+
+    class ArticleApproval {
+        PRIMARY_KEY articleApprovalId: Long
+        FOREIGN_KEY articleId: Long
+        approverUserId: Long
+        approverUsername: String
+        roleId: Long
+        roleName: String
+        approvalWeight: BigDecimal
+        status: String
+        comments: String
+        timestamp: LocalDateTime
+        --
+        + getArticle(): Article
+    }
+
+    note right of ArticleApproval
+        Status Values:
+        - "APPROVED"
+        - "REJECTED"
+    end note
+
+    class ArticleController {
+        --
+        + createArticle(ArticleCreateDTO): ResponseEntity<Article>
+        + updateArticle(id: Long, ArticleUpdateDTO): ResponseEntity<Article>
+        + deleteArticle(id: Long): ResponseEntity<Void>
+        + getAllPublishedArticles(): ResponseEntity<List<Article>>
+        + getArticleById(id: Long): ResponseEntity<Article>
+        + getArticlesByAuthor(authorId: Long): ResponseEntity<List<Article>>
+        + sendToReview(id: Long): ResponseEntity<Article>
+        + getPendingArticles(): ResponseEntity<List<Article>>
+    }
+
+    class ApprovalController {
+        --
+        + approveOrRejectArticle(ApprovalRequestDTO): ResponseEntity<ApprovalResponse>
+        + getApprovalsByArticle(articleId: Long): ResponseEntity<List<ArticleApproval>>
+    }
+
+    class ArticleServiceImpl {
+        --
+        + createArticle(ArticleCreateDTO, authorId: Long): Article
+        + updateArticle(id: Long, ArticleUpdateDTO, userId: Long): Article
+        + deleteArticle(id: Long, userId: Long): void
+        + getAllPublishedArticles(): List<Article>
+        + getArticleById(id: Long): Article
+        + getArticlesByAuthor(authorId: Long): List<Article>
+        + sendToReview(id: Long, userId: Long): Article
+        + getPendingArticles(): List<Article>
+    }
+
+    class ApprovalServiceImpl {
+        --
+        + processApproval(ApprovalRequestDTO, userId: Long, roles: List): ApprovalResponse
+        + getApprovalsByArticle(articleId: Long): List<ArticleApproval>
+        - updateArticleApprovalPercentage(article: Article): void
+        - updateArticleStatus(article: Article): void
+    }
+
+    class RoleRepository {
+        --
+        + findByRoleName(roleName: String): Optional<Role>
+    }
+}
+
+package "Suggestion Service (Port 8083)" {
+
+    class PromptConfig {
+        PRIMARY_KEY idPromptConfig: Long
+        promptTemplate: String {TEXT}
+        updatedAt: LocalDateTime
+        updatedBy: String
+    }
+
+    class SuggestionController {
+        --
+        + generateSuggestions(): ResponseEntity<List<String>>
+    }
+
+    class PromptConfigController {
+        --
+        + getPromptConfig(): ResponseEntity<PromptConfig>
+        + updatePromptConfig(PromptConfigDTO): ResponseEntity<PromptConfig>
+    }
+
+    class GeminiService {
+        - apiUrl: String
+        - apiKey: String
+        --
+        + generateSuggestions(trends: List<String>, prompt: String): List<String>
+        - buildRequestBody(trends: List, prompt: String): String
+        - parseResponse(response: String): List<String>
+    }
+
+    class RssService {
+        - RSS_URL: String
+        --
+        + fetchTrendingTopics(): List<String>
+    }
+}
+
+package "Frontend (Angular - Port 4200)" {
+
+    class AuthService {
+        --
+        + login(username: String, password: String): Observable<LoginResponse>
+        + logout(): void
+        + getToken(): String
+        + getUserId(): number
+        + getUsername(): String
+        + getRoles(): string[]
+        + isAuthenticated(): boolean
+    }
+
+    class ArticleService {
+        --
+        + createArticle(article): Observable<Article>
+        + updateArticle(id, article): Observable<Article>
+        + deleteArticle(id): Observable<void>
+        + getPublishedArticles(): Observable<Article[]>
+        + getArticleById(id): Observable<Article>
+        + getArticlesByAuthor(authorId): Observable<Article[]>
+        + sendToReview(id): Observable<Article>
+        + getPendingArticles(): Observable<Article[]>
+    }
+
+    class ApprovalService {
+        --
+        + approveOrRejectArticle(approval): Observable<ApprovalResponse>
+        + getApprovalsByArticle(articleId): Observable<ArticleApproval[]>
+    }
+
+    class SuggestionService {
+        --
+        + generateSuggestions(): Observable<string[]>
+    }
+
+    class AdminUserService {
+        --
+        + createUser(user): Observable<User>
+        + getAllUsers(): Observable<User[]>
+        + updateUser(id, user): Observable<User>
+        + deleteUser(id): Observable<void>
+    }
+
+    class PromptConfigService {
+        --
+        + getPromptConfig(): Observable<PromptConfig>
+        + updatePromptConfig(config): Observable<PromptConfig>
+    }
+
+    class JwtInterceptor {
+        --
+        + intercept(request, next): Observable<HttpEvent>
+    }
+
+    class AuthGuard {
+        --
+        + canActivate(): boolean
+    }
+}
+
+' Relationships within Auth Service
+User "many" -- "many" Role : has roles >
+User "1" -- "many" AdminUserService
+Role "many" -- "1" AdminUserService
+JwtService -- AuthController
+AdminUserService -- AdminUserController
+UserDetailsServiceImpl -- User
+
+' Relationships within Article Service
+Article "many" -- "1" ArticleStatus
+Article "1" -- "many" ArticleApproval
+ArticleController -- ArticleServiceImpl
+ApprovalController -- ApprovalServiceImpl
+ArticleServiceImpl -- Article
+ArticleServiceImpl -- ArticleStatus
+ApprovalServiceImpl -- Article
+ApprovalServiceImpl -- ArticleApproval
+ApprovalServiceImpl -- RoleRepository
+
+' Relationships within Suggestion Service
+SuggestionController -- GeminiService
+SuggestionController -- RssService
+PromptConfigController -- PromptConfig
+
+' Cross-Service Relationships (Logical, not direct FK)
+Article ..> User : authorId references
+ArticleApproval ..> User : approverUserId references
+ArticleApproval ..> Role : roleId references
+
+' Frontend to Backend Service Calls
+AuthService ..> AuthController : HTTP calls
+ArticleService ..> ArticleController : HTTP calls
+ApprovalService ..> ApprovalController : HTTP calls
+SuggestionService ..> SuggestionController : HTTP calls
+AdminUserService ..> AdminUserController : HTTP calls
+PromptConfigService ..> PromptConfigController : HTTP calls
+
+JwtInterceptor ..> AuthService : uses token
+AuthGuard ..> AuthService : checks auth
+
+note as N1
+    <b>Microservices Architecture</b>
+
+    <b>Auth Service (8081):</b>
+    - User authentication & JWT generation
+    - User and role management
+    - Shared JWT secret across services
+
+    <b>Article Service (8082):</b>
+    - Article lifecycle management
+    - Approval workflow system
+    - Status transitions based on approval %
+
+    <b>Suggestion Service (8083):</b>
+    - AI-powered article suggestions
+    - Google Gemini API integration
+    - RSS trending topics integration
+
+    <b>Frontend (4200):</b>
+    - Angular 21 application
+    - JWT-based authentication
+    - Role-based access control
+end note
+
+note as N2
+    <b>Approval Workflow:</b>
+
+    1. Author creates article (Borrador, 0%)
+    2. Author sends to review (En revision)
+    3. Multiple approvers review:
+       - Each role has approval weight
+       - APPROVED: adds weight to total %
+       - REJECTED: status → Observado
+    4. When total reaches 100% → Publicado
+    5. If rejected at any step → Observado
+       - Author can edit and resubmit
+end note
+
+@enduml

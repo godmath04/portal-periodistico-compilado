@@ -1,13 +1,13 @@
 package com.portalperiodistico.auth_service.config;
 
-import com.portalperiodistico.auth_service.service.JwtService;
+import com.portalperiodistico.auth_service.service.interfaces.TokenClaimsExtractor;
+import com.portalperiodistico.auth_service.service.interfaces.TokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,15 +18,26 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtro de autenticación JWT para Spring Security
+ *
+ * Principios SOLID aplicados:
+ * - Dependency Inversion Principle (DIP): Depende de interfaces (TokenClaimsExtractor, TokenProvider)
+ *   en lugar de implementaciones concretas
+ * - Interface Segregation Principle (ISP): Usa interfaces segregadas según la necesidad
+ *   (extractUsername usa TokenClaimsExtractor, validación usa TokenProvider)
+ *
+ * Antes: Filtro dependía de la clase concreta JwtService
+ * Ahora: Filtro depende de abstracciones segregadas según su uso
+ */
 @Component
-
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    // Necesitamos nuestros dos servicios clave
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private UserDetailsService userDetailsService;
+    // Inyección por constructor (inmutable)
+    private final TokenClaimsExtractor tokenClaimsExtractor;
+    private final TokenProvider tokenProvider;
+    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(
@@ -50,8 +61,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
 
         try {
-            // 4. Extraer el username del token
-            username = jwtService.extractUsername(jwt);
+            // 4. Extraer el username del token usando TokenClaimsExtractor
+            username = tokenClaimsExtractor.extractUsername(jwt);
 
             // 5. Validar el token
             //    Comprobamos que el username no sea nulo Y que el usuario no esté ya autenticado
@@ -60,8 +71,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Cargamos los detalles del usuario desde la BD
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                // Si el token es válido...
-                if (jwtService.isTokenValid(jwt, userDetails)) {
+                // Si el token es válido usando TokenProvider...
+                if (tokenProvider.validateToken(jwt, userDetails)) {
                     // ...creamos una autenticación para Spring Security
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,

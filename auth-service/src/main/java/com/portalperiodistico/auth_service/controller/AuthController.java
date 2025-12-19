@@ -1,121 +1,84 @@
 package com.portalperiodistico.auth_service.controller;
 
-import com.portalperiodistico.auth_service.domain.entity.Role;
 import com.portalperiodistico.auth_service.domain.entity.User;
-import com.portalperiodistico.auth_service.domain.repository.RoleRepository;
 import com.portalperiodistico.auth_service.domain.repository.UserRepository;
 import com.portalperiodistico.auth_service.dto.AuthRequest;
 import com.portalperiodistico.auth_service.dto.AuthResponse;
 import com.portalperiodistico.auth_service.dto.RegisterRequest;
-import com.portalperiodistico.auth_service.service.JwtService;
+import com.portalperiodistico.auth_service.service.interfaces.AuthenticationService;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails; // Importante
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.Map;
 
-import java.util.Set;
-import java.util.stream.Collectors;
-
+/**
+ * Controlador REST para autenticación de usuarios
+ *
+ * Principios SOLID aplicados:
+ * - Dependency Inversion Principle (DIP): Depende de la interfaz AuthenticationService,
+ *   no de implementaciones concretas ni de repositorios
+ * - Open/Closed Principle (OCP): La lógica de autenticación está encapsulada en el servicio,
+ *   permitiendo extensión sin modificar el controller
+ *
+ * Antes: Controller dependía directamente de repositorios y contenía lógica de negocio
+ * Ahora: Controller delega toda la lógica a AuthenticationService (abstracción)
+ */
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
+    private final AuthenticationService authenticationService;
+    private final UserRepository userRepository; // Solo para getUserBasicInfo (endpoint de lectura simple)
 
     /**
-     * Endpoint para iniciar sesión (VERSIÓN ESTÁNDAR)
-     * POST /auth/login
+     * Endpoint para iniciar sesión
+     *
+     * Delega toda la lógica de autenticación al AuthenticationService
+     *
+     * @param request Datos de autenticación (username y password)
+     * @return ResponseEntity con el token JWT y datos del usuario
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
-            //0. Verificar si el usuario esta activo antes de la autenticacion
-            User user = userRepository.findByUsername(request.getUsername())
-                    .orElse(null);
-            if (user != null && !user.isActive())
-            {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                                .body(Map.of("message", "Tu cuenta ha sido desactivada por un administrador"));
-            }
-
-            // 1. Autenticar al usuario.
-            //    Esto usa UserDetailsServiceImpl y el PasswordEncoder
-            //    para verificar la contraseña.
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
-                    )
-            );
-
-            // 2. Si la autenticación fue exitosa, el objeto 'authentication'
-            //    contiene el UserDetails que creó nuestro servicio.
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-            // 3. Generar el token JWT usando ese UserDetails
-            String jwt = jwtService.generateToken(userDetails);
-
-            // 4. Devolver el token
-            return ResponseEntity.ok(AuthResponse.builder()
-                    .token(jwt)
-                    .username(userDetails.getUsername())
-                    .build());
+            // Delegar toda la lógica al servicio de autenticación
+            AuthResponse response = authenticationService.login(request);
+            return ResponseEntity.ok(response);
         } catch (BadCredentialsException e) {
             System.out.println("CAUGHT BAD CREDENTIAL EXCEPTION: " + e.getMessage());
             // Manejar usuario/contraseña incorrectos
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(java.util.Map.of("message", "Usuario o contraseña incorrectos"));
+                    .body(Map.of("message", "Usuario o contraseña incorrectos"));
+        } catch (ResponseStatusException e) {
+            // Manejar cuenta desactivada
+            return ResponseEntity.status(e.getStatusCode())
+                    .body(Map.of("message", e.getReason()));
         }
     }
 
     /**
      * Endpoint para registrar un nuevo usuario
-     * POST /auth/register
+     *
+     * Delega toda la lógica de registro al AuthenticationService
+     *
+     * @param request Datos del nuevo usuario
+     * @return ResponseEntity con mensaje de confirmación
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
-
-        if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: El nombre de usuario ya existe.");
+        try {
+            // Delegar toda la lógica al servicio de autenticación
+            String message = authenticationService.registerUser(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(message);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: El email ya está en uso.");
-        }
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setActive(true);
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-
-        Role reporteroRole = roleRepository.findByRoleName("Reportero")
-                .orElseThrow(() -> new RuntimeException("Error: Rol 'Reportero' no encontrado."));
-
-        user.setRoles(Set.of(reporteroRole));
-        userRepository.save(user);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Usuario registrado exitosamente.");
     }
 
     /**

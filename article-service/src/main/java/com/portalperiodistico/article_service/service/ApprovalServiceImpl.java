@@ -8,6 +8,9 @@ import com.portalperiodistico.article_service.domain.entity.ArticleStatus;
 import com.portalperiodistico.article_service.domain.repository.ArticleApprovalRepository;
 import com.portalperiodistico.article_service.domain.repository.ArticleRepository;
 import com.portalperiodistico.article_service.domain.repository.ArticleStatusRepository;
+import com.portalperiodistico.article_service.domain.state.ArticleState;
+import com.portalperiodistico.article_service.domain.state.ArticleStateFactory;
+import com.portalperiodistico.article_service.domain.state.ArticleStateTransition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,17 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Implementación del servicio de aprobaciones usando State Pattern
+ *
+ * Principios SOLID aplicados:
+ * - Open/Closed Principle (OCP): Usa State Pattern para transiciones de estado,
+ *   permitiendo agregar nuevos estados sin modificar este código
+ * - Dependency Inversion Principle (DIP): Depende de ArticleState (abstracción)
+ *
+ * Antes: Lógica de transiciones hardcodeada con if/else y strings
+ * Ahora: State Pattern encapsula la lógica de cada estado
+ */
 @Service
 @RequiredArgsConstructor
 public class ApprovalServiceImpl implements ApprovalService {
@@ -23,11 +37,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ArticleRepository articleRepository;
     private final ArticleApprovalRepository approvalRepository;
     private final ArticleStatusRepository articleStatusRepository;
-
-    private static final String STATUS_DRAFT = "Borrador";
-    private static final String STATUS_IN_REVIEW = "En revision";
-    private static final String STATUS_PUBLISHED = "Publicado";
-    private static final String STATUS_REJECTED = "Observado";
+    private final ArticleStateFactory articleStateFactory;
 
     private static final String APPROVAL_APPROVED = "APPROVED";
     private static final String APPROVAL_REJECTED = "REJECTED";
@@ -66,41 +76,27 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         approvalRepository.save(approval);
 
-        // 4. Procesar segun el estado
-        String newArticleStatus;
-        BigDecimal newPercentage;
-        String message;
+        // 4. Procesar usando State Pattern
+        // Obtener el estado actual del artículo
+        String currentStateName = article.getArticleStatus().getStatusName();
+        ArticleState currentState = articleStateFactory.getState(currentStateName);
 
+        // Delegar la transición al estado correspondiente
+        ArticleStateTransition transition;
         if (APPROVAL_REJECTED.equals(request.getStatus())) {
-            // Si es RECHAZADO, el articulo pasa a "Observado"
-            newArticleStatus = STATUS_REJECTED;
-            newPercentage = article.getCurrentApprovalPercentage(); // No cambia el porcentaje
-            message = "Articulo rechazado por " + roleName + ". El articulo ha sido marcado como Observado.";
-
+            transition = currentState.processRejection(article);
         } else {
-            // Si es APROBADO, sumar el porcentaje
-            newPercentage = article.getCurrentApprovalPercentage().add(approvalWeight);
-            article.setCurrentApprovalPercentage(newPercentage);
-
-            if (newPercentage.compareTo(BigDecimal.valueOf(100)) >= 0) {
-                // Si llega al 100%, publicar
-                newArticleStatus = STATUS_PUBLISHED;
-                message = "Articulo aprobado por " + roleName + ". El articulo ha alcanzado el 100% y ha sido PUBLICADO.";
-            } else {
-                // Si no llega al 100%, mantener en revision
-                newArticleStatus = STATUS_IN_REVIEW;
-                message = "Articulo aprobado por " + roleName + ". Progreso actual: " + newPercentage + "%";
-            }
+            transition = currentState.processApproval(article, approvalWeight);
         }
 
-        // 5. Actualizar el estado del articulo
-        ArticleStatus status = articleStatusRepository.findByStatusName(newArticleStatus)
-                .orElseThrow(() -> new RuntimeException("Estado '" + newArticleStatus + "' no encontrado en la BD"));
+        // 5. Aplicar la transición retornada por el estado
+        ArticleStatus newStatus = articleStatusRepository.findByStatusName(transition.getNewStateName())
+                .orElseThrow(() -> new RuntimeException("Estado '" + transition.getNewStateName() + "' no encontrado en la BD"));
 
-        article.setArticleStatus(status);
+        article.setArticleStatus(newStatus);
         articleRepository.save(article);
 
-        // 6. Construir la respuesta
+        // 6. Construir la respuesta usando los datos de la transición
         return new ApprovalResponse(
                 article.getIdArticle(),
                 article.getTitle(),
@@ -108,9 +104,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                 roleName,
                 approvalWeight,
                 request.getStatus(),
-                newPercentage,
-                newArticleStatus,
-                message
+                transition.getNewPercentage(),
+                transition.getNewStateName(),
+                transition.getMessage()
         );
     }
     @Override
