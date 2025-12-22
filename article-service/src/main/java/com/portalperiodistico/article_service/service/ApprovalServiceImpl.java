@@ -8,6 +8,7 @@ import com.portalperiodistico.article_service.domain.entity.ArticleStatus;
 import com.portalperiodistico.article_service.domain.repository.ArticleApprovalRepository;
 import com.portalperiodistico.article_service.domain.repository.ArticleRepository;
 import com.portalperiodistico.article_service.domain.repository.ArticleStatusRepository;
+import com.portalperiodistico.article_service.domain.observer.ArticleStateChangeNotifier;
 import com.portalperiodistico.article_service.domain.state.ArticleState;
 import com.portalperiodistico.article_service.domain.state.ArticleStateFactory;
 import com.portalperiodistico.article_service.domain.state.ArticleStateTransition;
@@ -38,6 +39,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final ArticleApprovalRepository approvalRepository;
     private final ArticleStatusRepository articleStatusRepository;
     private final ArticleStateFactory articleStateFactory;
+    private final ArticleStateChangeNotifier stateChangeNotifier;
 
     private static final String APPROVAL_APPROVED = "APPROVED";
     private static final String APPROVAL_REJECTED = "REJECTED";
@@ -95,6 +97,9 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         article.setArticleStatus(newStatus);
         articleRepository.save(article);
+
+        // 5.1. Notificar a todos los observadores sobre el cambio de estado (Observer Pattern)
+        stateChangeNotifier.notifyStateChange(article, currentStateName, transition.getNewStateName(), transition.getMessage());
 
         // 6. Construir la respuesta usando los datos de la transición
         return new ApprovalResponse(
